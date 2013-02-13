@@ -10,28 +10,57 @@ class KeyValue {
 		return encode(obj, true);
 	}
 	static private function encode(obj:Dynamic, root:Bool):String {
-		if (obj == null) {
-			return 'null';
-		}else if (Std.is(obj, Float)) {
-			return untyped obj.toString();
-		}else if (Std.is(obj, Bool)) {
-			return obj.toString();
-		}else if (Std.is(obj, String)) {
-			if (isKeyword(obj) || !isIdentifier(obj)) {
-				return '"' + escapeString(obj) + '"';
+		#if js
+			if (obj == null) {
+				return 'null';
+			}else if (untyped __js__('typeof obj == "number"')) {
+				return untyped obj.toString();
+			}else if (untyped __js__('typeof obj == "boolean"')) {
+				return obj.toString();
+			}else if (untyped __js__('typeof obj == "string"')) {
+				if (isKeyword(obj) || !isIdentifier(obj)) {
+					return '"' + escapeString(obj) + '"';
+				}else {
+					return obj;
+				}
+				
+			}else if (untyped __js__('obj instanceof Array')) {
+				return '[' + map(obj, function(elem) { return encode(elem, false); }).join(' ') + ']';
 			}else {
-				return obj;
+				var str = '';
+				if (!root) str += '{';
+				untyped __js__("var first=true;for(var i in obj){if(!first) str += ' ';first = false;str += this.encode(i, false)+' '+this.encode(obj[i], false);};");
+				if (!root) str += '}';
+				
+				return str;
 			}
-			
-		}else if (Std.is(obj, Array)) {
-			return '[' + map(obj, function(elem) { return encode(elem, false); }).join(' ') + ']';
-		}else {
-			if (root) {
-				return map(Reflect.fields(obj), function(i) { return encode(i, false) + ' ' + encode(Reflect.field(obj, i), false); } ).join(' ');
-			}else{
-				return '{' + map(Reflect.fields(obj), function(i) { return encode(i, false) + ' ' + encode(Reflect.field(obj, i), false); } ).join(' ') + '}';
+		#else
+			if (obj == null) {
+				return 'null';
+			}else if (Std.is(obj, Float)) {
+				return untyped obj.toString();
+			}else if (Std.is(obj, Bool)) {
+				return obj.toString();
+			}else if (Std.is(obj, String)) {
+				if (isKeyword(obj) || !isIdentifier(obj)) {
+					return '"' + escapeString(obj) + '"';
+				}else {
+					return obj;
+				}
+				
+			}else if (Std.is(obj, Array)) {
+				return '[' + map(obj, function(elem) { return encode(elem, false); }).join(' ') + ']';
+			}else {
+				var str = '';
+				if (!root) str += '{';
+				str += return map(Reflect.fields(obj), function(i) { return encode(i, false) + ' ' + encode(Reflect.field(obj, i), false); } ).join(' ');
+				
+				if (!root) str += '}';
+				
+				return str;
 			}
-		}
+		#end
+		
 	}
 	
 	static public function parse(str:String):Dynamic {
