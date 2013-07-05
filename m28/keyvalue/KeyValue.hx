@@ -231,6 +231,16 @@ class KeyValue {
 				}
 				
 				--i; // Reparse the character that ended this identifier
+			}else if (chr == '\') {
+				++i;
+				while (i < str.length) {
+					chr = str.charAt(i);
+					++i;
+					if(chr == "\n" || chr == "\r"){
+						++line;
+						break
+					}
+				}
 			}else{
 				throw "Unexpected character \"" + chr + "\" at line " + line + " (offset " + i + ")";
 			}
